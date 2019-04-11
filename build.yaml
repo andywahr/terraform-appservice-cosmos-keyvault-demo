@@ -1,0 +1,26 @@
+# a build with no CI
+trigger: none
+  
+jobs:
+- job: Deploy_Infrastructure_via_Terraform
+  pool:
+    name: Hosted Ubuntu 1604
+
+  variables:
+    ConnectedServiceName_local: $(ConnectedServiceName)
+
+  steps:
+  - task: qetza.replacetokens.replacetokens-task.replacetokens@3
+    displayName: 'Replace tokens in override.tf'
+    inputs:
+      targetFiles: override.tf
+     
+  - task: AzureCLI@1
+    displayName: 'Azure CLI - Run Terraform'
+    inputs:
+      addSpnToEnvironment: true    
+      azureSubscription: '${{ variables.ConnectedServiceName_local }}'
+      scriptPath: '$(Build.sourcesDirectory)/deploy.bash'
+      arguments: '$servicePrincipalId $servicePrincipalKey'
+      workingDirectory: $(Build.sourcesDirectory)
+
